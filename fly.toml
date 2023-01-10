@@ -1,10 +1,12 @@
 app = "protoh4ck3rs"
 kill_signal = "SIGKILL"
+kill_timeout = 5
 
 [[services]]
   processes = ["app"]
   protocol = "tcp"
   internal_port = 7777
+  http_checks = []
   [services.concurrency]
     hard_limit = 20
     soft_limit = 10
@@ -12,3 +14,9 @@ kill_signal = "SIGKILL"
 
   [[services.ports]]
     port = 7777
+
+  [[services.tcp_checks]]
+    grace_period = "1s"
+    interval = "15s"
+    restart_limit = 0
+    timeout = "2s"

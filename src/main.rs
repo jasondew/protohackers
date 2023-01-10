@@ -56,23 +56,29 @@ fn is_prime(candidate: usize) -> bool {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind("0.0.0.0:7777").await?;
+    println!("Listening for connections!");
 
     loop {
         let (mut socket, _address) = listener.accept().await?;
+        println!("Connection established.");
 
         tokio::spawn(async move {
             let mut buf = [0; 1024];
 
             loop {
                 let n = match socket.read(&mut buf).await {
-                    Ok(n) if n == 0 => return,
+                    Ok(n) if n == 0 => break,
                     Ok(n) => n,
                     Err(error) => {
                         eprintln!("socket read failed: {:?}", error);
-                        return;
+                        break;
                     }
                 };
-                println!("received: {}", n);
+                println!(
+                    "received {} bytes: {}",
+                    n,
+                    std::str::from_utf8(&buf[0..n]).unwrap()
+                );
 
                 match handle_request(&buf[0..n]) {
                     Ok(response) => {
@@ -85,7 +91,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .await
                         {
                             eprintln!("socket write failed: {:?}", error);
-                            return;
+                            break;
                         }
                     }
                     Err(error) => {
@@ -95,10 +101,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         {
                             eprintln!("socket write failed: {:?}", error);
                         }
-                        return;
+                        break;
                     }
                 }
             }
+            println!("Connection closed.");
         });
     }
 }
