@@ -4,11 +4,11 @@ kill_signal = "SIGKILL"
 [[services]]
   processes = ["app"]
   protocol = "tcp"
-  internal_port = 8080
+  internal_port = 7777
   [services.concurrency]
     hard_limit = 20
     soft_limit = 10
     type = "connections"
 
   [[services.ports]]
-    port = 80
+    port = 7777

@@ -55,7 +55,7 @@ fn is_prime(candidate: usize) -> bool {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let listener = TcpListener::bind("0.0.0.0:8080").await?;
+    let listener = TcpListener::bind("0.0.0.0:7777").await?;
 
     loop {
         let (mut socket, _address) = listener.accept().await?;
@@ -72,6 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         return;
                     }
                 };
+                println!("received: {}", n);
 
                 match handle_request(&buf[0..n]) {
                     Ok(response) => {
