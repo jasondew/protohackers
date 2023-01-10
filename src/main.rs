@@ -18,15 +18,20 @@ fn handle_request(buf: &[u8]) -> Result<Response, String> {
     let request: Request = match serde_json::from_slice(buf) {
         Ok(request) => request,
         Err(error) => {
-            return Err(format!("JSON decode failed: {:?}", error));
+            return Err(format!("JSON decode failed: {}", error));
         }
     };
-    let response: Response = Response {
-        method: request.method,
-        prime: is_prime(request.number),
-    };
 
-    Ok(response)
+    if request.method != "isPrime" {
+        Err(format!("unknown method: {}", request.method))
+    } else {
+        let response: Response = Response {
+            method: request.method,
+            prime: is_prime(request.number),
+        };
+
+        Ok(response)
+    }
 }
 
 fn is_prime(candidate: usize) -> bool {
@@ -84,6 +89,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     Err(error) => {
                         eprintln!("{}", error);
+                        if let Err(error) =
+                            socket.write_all(error.to_string().as_bytes()).await
+                        {
+                            eprintln!("socket write failed: {:?}", error);
+                        }
                         return;
                     }
                 }
@@ -114,13 +124,29 @@ mod tests {
     }
 
     #[test]
-    fn test_handle_request() {
+    fn test_handle_request_valid() {
         assert_eq!(
             handle_request(br#"{"method":"isPrime","number": 7}"#),
             Ok(Response {
                 method: "isPrime".into(),
                 prime: true
             })
+        );
+    }
+
+    #[test]
+    fn test_handle_request_unknown_method() {
+        assert_eq!(
+            handle_request(br#"{"method":"isComposite","number": 7}"#),
+            Err("unknown method: isComposite".into())
+        );
+    }
+
+    #[test]
+    fn test_handle_request_missing_method() {
+        assert_eq!(
+            handle_request(br#"{"number": 7}"#),
+            Err("JSON decode failed: missing field `method` at line 1 column 13".into())
         );
     }
 }

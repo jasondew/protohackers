@@ -8,6 +8,6 @@ RUN cargo install --path .
 # Deployed container
 FROM debian:buster-slim
 
-COPY --from=builder /usr/local/cargo/bin/p0-echo /usr/local/bin/p0-echo
+COPY --from=builder /usr/local/cargo/bin/protohackers /usr/local/bin/protohackers
 
-CMD ["p0-echo"]
+CMD ["protohackers"]
